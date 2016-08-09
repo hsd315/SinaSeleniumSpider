@@ -1,161 +1,176 @@
 #coding:utf-8
-import requests
-from bs4 import BeautifulSoup
-from mytools.stringHandleByMyself import stripWithParamString
-import time
+"""
+@file:      userClass.py
+@author:    lyn
+@contact:   tonylu716@gmail.com
+@python:    3.3
+@editor:    PyCharm
+@create:    2016-8-9 16:30
+@description:
+            爬取微博用户信息
+"""
+
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time,pymysql
+
+
 
 class User(object):
-    def __init__(self,user_account_id,headers):
-        self.userHomePageLink = 'http://weibo.cn/' + user_account_id
-        self.userInfoLink =  self.userHomePageLink + '/info'
+    def __init__(self,user_account_id):
+        self.driver = webdriver.Chrome()
         self.account_id = user_account_id
         self.username = ''
-        self.sex = 1
-        self.area = ''
-        self.authentication = None
+        self.sex = None
+        self.area = None
+        self.is_auth = None
+        self.auth_info = None
+        self.is_vip = None
         self.birthday = None
         self.abstract_info = None
-        self.tag_list = []
-        self.tag_string = ''
-        self.daren_info = None
-        self.fans_cot = 888888
-        self.weibo_cot = 888888
-        self.focus_cot = -1
-        self.headers = headers
-        response = requests.get(url=self.userInfoLink,headers=self.headers)
-        self.soup = BeautifulSoup(response.text)
-        self.detailParseCoreRun()
-        self.homepageParseCoreRun()
-        
+        self.company = None
+        self.school = None
+        self.fans_cot = None
+        self.weibo_cot = None
+        self.follow_cot = None
+        self.create_time = None
+
+
     def show_in_cmd(self):
         print('**************用户信息**************')
-        print('account_id :\t\t',self.account_id)
-        print('fans_cot :\t\t',self.fans_cot)
-        print('weibo_cot :\t\t',self.weibo_cot)
-        print('focus_cot :\t\t',self.focus_cot)
-        print('head_pic_url :\t\t',self.head_pic_url)
-        print('username :\t\t',self.username)
-        print('sex :\t\t\t',self.sex)
-        print('area :\t\t\t',self.area)
-        print('authentication :\t',self.authentication)
-        print('birthday :\t\t',self.birthday)
-        print('abstract_info :\t\t',self.abstract_info)
-        print('tag_string :\t\t',self.tag_string)
-        print('tag_list :\t\t',self.tag_list)
-        print('daren_info :\t\t',self.daren_info)
+        print('account_id :\t\t'+self.account_id)
+        print('username :\t\t'+self.username)
+        print('is_vip :\t\t'+str(self.is_vip))
+        print('fans_cot :\t\t'+str(self.fans_cot))
+        print('weibo_cot :\t\t'+str(self.weibo_cot))
+        print('follow_cot :\t\t'+str(self.follow_cot))
+        print('sex :\t\t\t'+str(self.sex))
+        print('is_auth :\t'+str(self.is_auth))
+        if self.area:
+            print('area :\t\t\t'+self.area)
+        if self.auth_info:
+            print('auth_info :\t'+self.auth_info)
+        if self.birthday:
+            print('birthday :\t\t'+self.birthday)
+        if self.abstract_info:
+            print('abstract_info :\t\t'+self.abstract_info)
+        if self.company:
+            print('company :\t\t'+self.company)
+        if self.school:
+            print('school :\t\t'+self.school)
         print('**************用户信息**************')
-        
-    @property
-    def head_pic_url(self):
-        head_pic = self.soup.find('img')
-        url = head_pic['src']
-        return url
+
     
-    def homepageParseCoreRun(self):
-        hpurl = self.userHomePageLink
-        response = requests.get(url=hpurl,headers=self.headers)
-        soup = BeautifulSoup(response.text)
-        #得到发的微博数目
-        try:
-            weibo_cot_string = soup.select('.tc')[0].text
-            weibo_cot_string = stripWithParamString(weibo_cot_string, '微博[')
-            weibo_cot_string = weibo_cot_string[:-1]
-            self.weibo_cot = int(weibo_cot_string)
-            #得到关注数和被关注数
-            a_list = soup.select('.tip2')[0].select('a')
-            focus_cot_string = a_list[0].text
-            fans_cot_string = a_list[1].text
-            focus_cot_string = stripWithParamString(focus_cot_string, '关注[')
-            focus_cot_string = focus_cot_string[:-1]
-            self.focus_cot = int(focus_cot_string)
-            fans_cot_string = stripWithParamString(fans_cot_string, '粉丝[')
-            fans_cot_string = fans_cot_string[:-1]
-            self.fans_cot = int(fans_cot_string)
-        except:
-            print(soup)
-                
-    def detailParseCoreRun(self):
-        detail_list = self.soup.select('.c')
-        try:
-            tag_href_list = detail_list[2].select('a')
-            tag_href_list = tag_href_list[:-1]
-            for tag_href in tag_href_list:
-                tag = {}
-                tag['tag_name'] = tag_href.text
-                tag['url'] = 'http://weibo.cn/' + str(tag_href['href'])
-                self.tag_list.append(tag)
-                self.tag_string += (str(tag['tag_name'])+',')
-            match_string = str(detail_list[2])
-            match_string = stripWithParamString(match_string, '<div class="c">')
-            match_string = match_string[:-10]
-            detail_list = match_string.split('<br/>')
-            def set_name(name):
-                self.username = name
-            def set_sex(sex):
-                if sex=='女':
-                    self.sex = 0
-            def set_area(area):
-                self.area = area
-            def set_abstract_info(abstract_info):
-                self.abstract_info = abstract_info
-            def set_authentication(authentication):
-                self.authentication = authentication
-            def set_birthday(birthday):
-                self.birthday = birthday
-            def set_daren_info(daren_info):
-                self.daren_info = daren_info    
-            def void_func(arg):
-                pass
-            def set_tag(tag):
-                pass
-                
-            str_vs_func_dict = {
-                        '昵称':       set_name,
-                        '认证':       set_authentication,
-                        '性别':       set_sex,
-                        '地区':       set_area,
-                        '简介':       set_abstract_info,
-                        '生日':       set_birthday,
-                        '标签':       set_tag,
-                        '达人':       set_daren_info,
-                    }
-            
-            for info in detail_list:
-                try:
-                    key_value = info.split(':')
-                    func = str_vs_func_dict[key_value[0]]
-                    func(key_value[1])
-                except:
-                    pass
-                    #print('Exception:',info,'match failed')
-        except Exception as e:
-            print(e)
-            print('ERROR:detail_list:',detail_list)
-                    
-    def save_to_db(self,dbObj):
-        if self.weibo_cot == 888888:
-            print('weibo_cot = 888888')
-            return
-        now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-        #保存用户数据
-        try:
-            dbObj.cur.execute(
-                "insert into user_copy(create_time,account_id,area,username,sex,authentication,birthday,abstract_info,tag,head_pic_url,fans_cot,weibo_cot,focus_cot)"
-                "values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                (now,self.account_id,self.area,self.username,self.sex,self.authentication,self.birthday,self.abstract_info,self.tag_string,self.head_pic_url,self.fans_cot,self.weibo_cot,self.focus_cot)
-            )
-            dbObj.conn.commit()
-            self.show_in_cmd()
-        except Exception as e:
-            print(e)
-        #保存标签数据    
-        for tag in self.tag_list:
+    def homepageParse(self):
+        userHomeLink = 'http://weibo.com/u/'+ self.account_id + '?is_all=1'
+        browser = self.driver
+        browser.set_window_size(
+            width=1000,height=500
+        )
+        while(1):
+            print (userHomeLink)
             try:
-                dbObj.cur.execute(
-                  "insert into tag(url,tag_name)"
-                  "values (%s,%s)",
-                  (tag['url'],tag['tag_name'])
-                              )
-                dbObj.conn.commit()
-            except Exception as e:
-                print(e)
+                browser.get(userHomeLink)
+                if WebDriverWait(browser, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME,'WB_frame'))
+                ):
+                    print(self.account_id+': '+'homepage加载正常,尝试获取用户信息...')
+                    if browser.find_elements_by_class_name('tb_counter') and browser.find_elements_by_class_name('ul_detail'):
+                        break
+                    else:
+                        pass
+            except:
+                print(self.account_id+': '+'homepage加载异常,重复访问...')
+                time.sleep(3)
+        self.parse_basics()
+        self.parse_details()
+
+
+    def parse_details(self):
+        details = self.driver.find_element_by_class_name('ul_detail').find_elements_by_tag_name('li')
+        for detail in details:
+            info = detail.text.split('\n')[1]
+            #print (info)
+            if detail.text.split('\n')[0]=='2':
+                self.area = info
+                continue
+            if info.split(' ')[0]==u'公司':
+                self.company = info.split(' ')[1]
+                continue
+            if info.split(' ')[0]==u'毕业于':
+                self.school = info.split(' ')[1]
+                continue
+            if u'年' in info and u'月' in info and u'日' in info:
+                self.birthday = info
+                continue
+            if u'简介' in info:
+                self.abstract_info = info.split(u'：')[1]
+
+
+    def parse_basics(self):
+        self.username = self.driver.find_element_by_class_name('username').text
+        tb = self.driver.find_element_by_class_name('tb_counter').find_elements_by_tag_name('strong')
+        self.follow_cot = int(tb[0].text)
+        self.fans_cot = int(tb[1].text)
+        self.weibo_cot = int(tb[2].text)
+        shadow = self.driver.find_element_by_class_name('shadow')
+        try:
+            shadow.find_element_by_class_name('icon_pf_male')
+            self.sex = 1
+        except:
+            self.sex = 0
+        try:
+            shadow.find_element_by_class_name('icon_member4')
+            self.is_vip = 1
+        except:
+            self.is_vip = 0
+        try:
+            shadow.find_element_by_class_name('icon_pf_approve')
+            self.is_auth = 1
+            self.auth_info = shadow.find_element_by_class_name('pf_intro').text
+        except:
+            try:
+                shadow.find_element_by_class_name('icon_pf_approve_co')
+                self.is_auth = 1
+                self.auth_info = shadow.find_element_by_class_name('pf_intro').text
+            except:
+                self.is_auth = 0
+                self.abstract_info = shadow.find_element_by_class_name('pf_intro').text
+
+
+    def save_to_db(self,cur):
+        try:
+            cur.execute(
+                'INSERT user(account_id,username,fans_cot,follow_cot,weibo_cot,area,birthday,sex,abstract_info,is_auth,is_vip,company,school,create_time) '
+                'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                (self.account_id,self.username,self.fans_cot,self.follow_cot,self.weibo_cot,self.area,self.birthday,self.sex,self.abstract_info,self.is_auth,self.is_vip,self.company,self.school,time.localtime())
+            )
+            conn.commit()
+            print ('User:'+self.username+'save success!')
+        except Exception as e:
+            print ('User save error:'+str(e))
+
+
+    def tear_down(self):
+        self.driver.close()
+
+
+
+if __name__=="__main__":
+    conn = pymysql.connect(
+        host='localhost',   port=3306,
+        user='root',        passwd='',
+        db='selenium_weibo',   charset='utf8'
+    )
+    cur = conn.cursor()
+    user_id_pool = ['1401880315','277772655','5360104594','5842071290']
+    for user_id in user_id_pool:
+        user = User(user_account_id=user_id)
+        user.homepageParse()
+        user.show_in_cmd()
+        user.save_to_db(cur)
+        user.tear_down()
+    conn.close()

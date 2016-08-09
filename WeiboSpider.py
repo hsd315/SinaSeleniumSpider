@@ -48,6 +48,7 @@ class SeleniumWeiboCatch(Thread):
                     print (self.user['id']+': '+'Same!BACK and NEW both is:_____ Sorry,Encoding Error!____')
             time.sleep(random.randint(2,4))
 
+
     def load_info_first(self):
         print(self.user['id']+': '+'正在初始化信息')
         while(1):
@@ -123,9 +124,11 @@ class SeleniumWeiboCatch(Thread):
         content = weiboEle.find_element_by_class_name('WB_text').text
         return content
 
+
     def parse_transmit_weibo(self,weiboEle):
         content = weiboEle.find_elements_by_class_name('WB_text')[0].text
         return content
+
 
     def send_mail(self,subject,content,img_src):
         local_time = time.strftime("%H:%M:%S  %Y-%m-%d",time.localtime(time.time()))
@@ -166,6 +169,7 @@ class SeleniumWeiboCatch(Thread):
         except:
             print(self.user['id']+': '+'图片保存失败')
         return name
+
 
     def tearDown(self):
         self.driver.close()
