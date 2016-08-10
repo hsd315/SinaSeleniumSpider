@@ -7,20 +7,21 @@
 @editor:    PyCharm
 @create:    2016-8-9 16:30
 @description:
-            爬取微博用户信息
+            用户信息类，包括爬取解析存储
 """
 
 
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from func import access_homepage
 import time,pymysql
 
 
 
-class User(object):
-    def __init__(self,user_account_id):
+class User:
+    def __init__(self,user_account_id,conn=None):
+        if conn:
+            self.conn = conn
+            self.cur = conn.cursor()
         self.driver = webdriver.Chrome()
         self.account_id = user_account_id
         self.username = ''
@@ -37,7 +38,8 @@ class User(object):
         self.weibo_cot = None
         self.follow_cot = None
         self.create_time = None
-
+        self.homepageParse()
+        self.tear_down()
 
     def show_in_cmd(self):
         print('**************用户信息**************')
@@ -65,26 +67,7 @@ class User(object):
 
     
     def homepageParse(self):
-        userHomeLink = 'http://weibo.com/u/'+ self.account_id + '?is_all=1'
-        browser = self.driver
-        browser.set_window_size(
-            width=1000,height=500
-        )
-        while(1):
-            print (userHomeLink)
-            try:
-                browser.get(userHomeLink)
-                if WebDriverWait(browser, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME,'WB_frame'))
-                ):
-                    print(self.account_id+': '+'homepage加载正常,尝试获取用户信息...')
-                    if browser.find_elements_by_class_name('tb_counter') and browser.find_elements_by_class_name('ul_detail'):
-                        break
-                    else:
-                        pass
-            except:
-                print(self.account_id+': '+'homepage加载异常,重复访问...')
-                time.sleep(3)
+        access_homepage(self.account_id,self.driver)
         self.parse_basics()
         self.parse_details()
 
@@ -141,14 +124,14 @@ class User(object):
                 self.abstract_info = shadow.find_element_by_class_name('pf_intro').text
 
 
-    def save_to_db(self,cur):
+    def save_to_db(self):
         try:
-            cur.execute(
+            self.cur.execute(
                 'INSERT user(account_id,username,fans_cot,follow_cot,weibo_cot,area,birthday,sex,abstract_info,is_auth,is_vip,company,school,create_time) '
                 'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                 (self.account_id,self.username,self.fans_cot,self.follow_cot,self.weibo_cot,self.area,self.birthday,self.sex,self.abstract_info,self.is_auth,self.is_vip,self.company,self.school,time.localtime())
             )
-            conn.commit()
+            self.conn.commit()
             print ('User:'+self.username+'save success!')
         except Exception as e:
             print ('User save error:'+str(e))
@@ -165,12 +148,9 @@ if __name__=="__main__":
         user='root',        passwd='',
         db='selenium_weibo',   charset='utf8'
     )
-    cur = conn.cursor()
     user_id_pool = ['1401880315','277772655','5360104594','5842071290']
     for user_id in user_id_pool:
-        user = User(user_account_id=user_id)
-        user.homepageParse()
+        user = User(user_account_id=user_id,conn=conn)
         user.show_in_cmd()
-        user.save_to_db(cur)
-        user.tear_down()
+        user.save_to_db()
     conn.close()
