@@ -1,10 +1,19 @@
 #coding:utf-8
-__author__ = 'Administrator'
+"""
+@file:      MonitorHandler.py
+@author:    lyn
+@contact:   tonylu716@gmail.com
+@python:    3.3
+@editor:    PyCharm
+@create:    2016-8-12 19:30
+@description:
+            对于用户主页监视器进行任务调度，进程分配
+"""
 
 from HomepageMonitor import HomepageMonitor
 import time,pymysql
 
-class SpidersHandler(object):
+class MonitorHandler(object):
     def __init__(self,user_list,conn=None):
         if conn:
             self.conn = conn
@@ -13,6 +22,7 @@ class SpidersHandler(object):
 
     def run(self):
         self.allocate_task()
+
 
     def allocate_task(self):
         print('分配线程!')
@@ -37,6 +47,4 @@ if __name__=='__main__':
 
     user_list = ['277772655','5360104594','5842071290']
 
-    spiders = SpidersHandler(user_list,conn)
-
-    spiders.run()
+    MonitorHandler(user_list,conn).run()

@@ -16,7 +16,6 @@ from func import access_homepage
 import time,pymysql
 
 
-
 class User:
     def __init__(self,user_account_id,conn=None):
         if conn:
@@ -39,6 +38,7 @@ class User:
         self.create_time = None
         self.homepageParse()
         self.tear_down()
+
 
     def show_in_cmd(self):
         print('**************用户信息**************')
