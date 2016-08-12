@@ -66,6 +66,7 @@ CREATE TABLE `weibo` (
 - Selenium作为测试自动化工具，爬虫适应性极强。对于大量js加载后的数据爬取有一定的优势。
 
 - 在两主类基础上开发:
+- 
  1) 对用户主页的监控，关注人新发微博邮件提示
 （HomePageMonitor.py + MonitorHandler.py + emailClass.py）
 
