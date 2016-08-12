@@ -1,6 +1,6 @@
 #SinaSeleniumSpider
 
-- 1.主类为weiboClass，userClass，数据库也由二者组成。
+## 主类为weiboClass，userClass，数据库也由二者组成。
 ```sql
 /*
 Navicat MySQL Data Transfer
@@ -59,18 +59,17 @@ CREATE TABLE `weibo` (
 
 ```
 
-- 2.该爬虫直接爬取weibo.com大站，大部分数据无需登陆，无需cookie。
+- 该爬虫直接爬取weibo.com大站，大部分数据无需登陆，无需cookie。
  
- 若对数据量有要求建议爬取weibo.cn。这里仅作测试实验使用。
+- 若对数据量有要求建议爬取weibo.cn。这里仅作测试实验使用。
 
-- 3.Selenium作为测试自动化工具，爬虫适应性极强。对于大量js加载后的数据爬取有一定的优势。
-- 4.在两主类基础上开发：
-  
-  1）对用户主页的监控，关注人新发微博邮件提示
+- Selenium作为测试自动化工具，爬虫适应性极强。对于大量js加载后的数据爬取有一定的优势。
 
+- 在两主类基础上开发:
+ 1) 对用户主页的监控，关注人新发微博邮件提示
 （HomePageMonitor.py + MonitorHandler.py + emailClass.py）
 
-  2）对于特定用户的粉丝或关注人进行提取
+  2) 对于特定用户的粉丝或关注人进行提取
   
   3）对于特定用户的粉丝进行机器筛选清理
   
