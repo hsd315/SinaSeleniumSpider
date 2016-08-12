@@ -21,19 +21,45 @@ class Weibo:
         if conn:
             self.conn = conn
         self.weiboEle = weiboEle
-        self.weibo_id = None
-        self.via_weibo_id = None
         self.content = None
-        self.user_id = None
-        self.create_time = None
         self.source = None
-        self.is_top = None
         self.via_cot = None
         self.like_cot = None
         self.comment_cot = None
-        self.is_via = None
         self.submit_time = None
-        self.parse()
+        self.create_time = None
+
+
+    @property
+    def weibo_id(self):
+        return self.weiboEle.get_attribute('mid')
+
+
+    @property
+    def is_top(self):
+        try:
+            self.weiboEle.find_element_by_class_name('W_icon_feedpin')
+            return 1
+        except:
+            return 0
+
+
+    @property
+    def is_via(self):
+        return '&' in self.weiboEle.get_attribute('tbinfo')
+
+
+    @property
+    def via_weibo_id(self):
+        if self.is_via:
+            return self.weiboEle.get_attribute('omid')
+        else:
+            return None
+
+    @property
+    def author_account_id(self):
+        wb_info = self.weiboEle.find_element_by_class_name('WB_detail').find_elements_by_class_name('WB_info')
+        return wb_info[0].find_element_by_tag_name('a').get_attribute('usercard').split('&')[0].split('=')[-1]
 
 
     def show_in_cmd(self):
@@ -44,7 +70,7 @@ class Weibo:
         print('via_cot :',self.via_cot)
         print('content :',self.content)
         print('weibo_id :',self.weibo_id)
-        print(u'user_id :',self.user_id)
+        print(u'author_account_id :',self.author_account_id)
         print(u'submit_time :',self.submit_time)
         print(u'is_via :',self.is_via)
         print('source :',self.source)
@@ -54,35 +80,22 @@ class Weibo:
 
     def parse(self):
         weiboEle = self.weiboEle
-        if '&' in weiboEle.get_attribute('tbinfo'):
-            self.is_via = 1
-            self.via_weibo_id = weiboEle.get_attribute('omid')
+        if self.is_via:
             via_user_id = weiboEle.get_attribute('tbinfo').split('&')[-1].split('=')[-1]
             self.via_weibo_parse(
                 via_weiboEle=weiboEle.find_element_by_class_name('WB_expand'),
                 user_id=via_user_id,
                 weibo_id=self.via_weibo_id
             )
-        else:
-            self.is_via = 0#即原创
-        self.weibo_id = weiboEle.get_attribute('mid')
         handles = weiboEle.find_element_by_class_name('WB_feed_handle').find_elements_by_tag_name('em')
         self.via_cot = handle_try_int(handles[3].text)
         self.comment_cot = handle_try_int(handles[6].text)
         self.like_cot = handle_try_int(handles[8].text)
-        weibo_detail = weiboEle.find_element_by_class_name('WB_detail')
-        wi = weibo_detail.find_elements_by_class_name('WB_info')
-        self.user_id = wi[0].find_element_by_tag_name('a').get_attribute('usercard').split('&')[0].split('=')[-1]
-        #存储注意先存user
         method_dict = public_parse(weiboEle=weiboEle)
         self.content = method_dict['content']
         self.submit_time = method_dict['submit_time']
         self.source = method_dict['source']
-        try:
-            weiboEle.find_element_by_class_name('W_icon_feedpin')
-            self.is_top = 1
-        except:
-            self.is_top = 0
+
 
 
     def via_weibo_parse(self,via_weiboEle,user_id,weibo_id):
@@ -109,7 +122,7 @@ class Weibo:
         source=None,is_via=None,via_weibo_id=None
     ):
         if save_self:
-            user_id = self.user_id
+            user_id = self.author_account_id
             weibo_id = self.weibo_id
         if self.get_db_id(weibo_id):
             print('Weibo save error: 微博之前已存')

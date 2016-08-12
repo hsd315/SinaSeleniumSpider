@@ -19,14 +19,14 @@ def access_homepage(user_account_id,browser=None,get_shot=False):
             height=1050,width=1000
         )
     while(1):
-        print ('Homepage_url: '+userHomeLink)
+        #print ('Homepage_url: '+userHomeLink)
         try:
             browser.get(userHomeLink)
             if WebDriverWait(browser, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME,'WB_frame'))
             ):
                 if browser.find_elements_by_class_name('tb_counter') and browser.find_elements_by_class_name('ul_detail'):
-                    print(user_account_id+': '+'homepage加载正常,尝试获取用户信息...')
+                    print(user_account_id+': '+'homepage加载正常...')
                     break
                 else:
                     print('元素显示不正常，重复访问...')

@@ -9,40 +9,40 @@
 @description:
             监测用户主页，新微博发邮件提示
 """
-from weiboClass import *
+from weiboClass import Weibo
 from func import access_homepage,send_mail
 from selenium import webdriver
+from threading import Thread
+import random,pymysql,time
 
 
-class HomepageMonitor:
+class HomepageMonitor(Thread):
     def __init__(self,user_account_id,conn=None):
+        Thread.__init__(self)
+        print(user_account_id+': 已分配得到线程')
         self.user_account_id = user_account_id
         self.driver = webdriver.Chrome()
         if conn:
             self.conn = conn
 
 
-    def main_loop(self):
-        browser = self.driver
+    def run(self):
         while(1):
-            access_homepage(self.user_account_id,browser)
-            for weiboEle in browser.find_elements_by_class_name('WB_feed_type'):
-                weibo = Weibo(weiboEle,self.conn)
-                weibo.show_in_cmd()
-                #假如查到某条非置顶微博，数据库中已存，则下方不用检查，必然都已存，直接再刷新
-                if weibo.get_db_id():
-                    print('本条微博数据库中已存在')
-                    if not weibo.is_top:
-                        print('该微博非置顶，本页已无未存微博')
-                        break
-                    else:
-                        print('该微博为置顶，向下方微博检测...\n\n')
-                        continue
-                print('检测到新微博，准备存入数据库...')
-                if weibo.save_to_db():
-                    self.new_weibo_action(content=weibo.content)
-                print('\n\n')
-            print('\n\n刷新访问...\n')
+            access_homepage(self.user_account_id,self.driver)
+            weiboEle_list = self.driver.find_elements_by_class_name('WB_feed_type')
+            new_weiboEle_list = self.get_new_weiboEle_list(weiboEle_list)
+            if new_weiboEle_list:
+                print(self.user_account_id+':'+str(len(new_weiboEle_list))+'条新微博存在！')
+                for weiboEle in new_weiboEle_list:
+                    weibo = Weibo(weiboEle,self.conn)
+                    weibo.parse()
+                    weibo.show_in_cmd()
+                    if weibo.save_to_db():
+                        self.new_weibo_action(content=weibo.content)
+                    print('\n\n')
+            else:
+                print(self.user_account_id+': '+'本页无未存微博')
+            time.sleep(random.randint(2,4))
 
 
     def get_homepage_screenshot(self):
@@ -69,6 +69,13 @@ class HomepageMonitor:
         )
 
 
+    def get_new_weiboEle_list(self,weiboEle_list):
+        new_weiboEle_list = []
+        for weiboEle in weiboEle_list:
+            if not Weibo(weiboEle,self.conn).get_db_id():
+                new_weiboEle_list.append(weiboEle)
+        return new_weiboEle_list
+
 
 if __name__=='__main__':
     conn = pymysql.connect(
@@ -82,5 +89,5 @@ if __name__=='__main__':
         conn = conn
     )
 
-    hpMontior.main_loop()
+    hpMontior.run()
 
