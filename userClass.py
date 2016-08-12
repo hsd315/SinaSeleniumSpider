@@ -21,7 +21,6 @@ class User:
     def __init__(self,user_account_id,conn=None):
         if conn:
             self.conn = conn
-            self.cur = conn.cursor()
         self.driver = webdriver.Chrome()
         self.account_id = user_account_id
         self.username = ''
@@ -125,16 +124,30 @@ class User:
 
 
     def save_to_db(self):
+        cur = self.conn.cursor()
         try:
-            self.cur.execute(
+            cur.execute(
                 'INSERT user(account_id,username,fans_cot,follow_cot,weibo_cot,area,birthday,sex,abstract_info,is_auth,is_vip,company,school,create_time) '
                 'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                 (self.account_id,self.username,self.fans_cot,self.follow_cot,self.weibo_cot,self.area,self.birthday,self.sex,self.abstract_info,self.is_auth,self.is_vip,self.company,self.school,time.localtime())
             )
             self.conn.commit()
-            print ('User:'+self.username+'save success!')
+            print ('User: '+self.username+' save success!')
         except Exception as e:
-            print ('User save error:'+str(e))
+            print ('User save error: '+str(e))
+
+
+    def get_db_id(self,account_id=None):
+        if account_id==None:
+            account_id = self.account_id
+        self.cur.execute(
+            'select id from user where account_id = ' + account_id
+        )
+        data = self.cur.fetchall()
+        if data:
+            return data[0][0]
+        else:
+            return False
 
 
     def tear_down(self):

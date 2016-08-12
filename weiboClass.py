@@ -12,7 +12,7 @@
 
 from selenium import webdriver
 import time,pymysql
-from func import access_homepage,time_str_convert_list,public_parse
+from func import access_homepage,public_parse,handle_try_int
 from userClass import User
 
 
@@ -20,7 +20,6 @@ class Weibo:
     def __init__(self,weiboEle,conn=None):
         if conn:
             self.conn = conn
-            self.cur = conn.cursor()
         self.weiboEle = weiboEle
         self.weibo_id = None
         self.via_weibo_id = None
@@ -68,9 +67,9 @@ class Weibo:
             self.is_via = 0#即原创
         self.weibo_id = weiboEle.get_attribute('mid')
         handles = weiboEle.find_element_by_class_name('WB_feed_handle').find_elements_by_tag_name('em')
-        self.via_cot = int(handles[3].text)
-        self.comment_cot = int(handles[6].text)
-        self.like_cot = int(handles[8].text)
+        self.via_cot = handle_try_int(handles[3].text)
+        self.comment_cot = handle_try_int(handles[6].text)
+        self.like_cot = handle_try_int(handles[8].text)
         weibo_detail = weiboEle.find_element_by_class_name('WB_detail')
         wi = weibo_detail.find_elements_by_class_name('WB_info')
         self.user_id = wi[0].find_element_by_tag_name('a').get_attribute('usercard').split('&')[0].split('=')[-1]
@@ -80,7 +79,7 @@ class Weibo:
         self.submit_time = method_dict['submit_time']
         self.source = method_dict['source']
         try:
-            wi[0].find_element_by_class_name('W_icon_feedpin')
+            weiboEle.find_element_by_class_name('W_icon_feedpin')
             self.is_top = 1
         except:
             self.is_top = 0
@@ -88,9 +87,9 @@ class Weibo:
 
     def via_weibo_parse(self,via_weiboEle,user_id,weibo_id):
         handles = via_weiboEle.find_elements_by_tag_name('em')
-        via_cot = int(handles[-4].text)
-        comment_cot = int(handles[-2].text)
-        like_cot = int(handles[-1].text)
+        via_cot = handle_try_int(handles[-4].text)
+        comment_cot = handle_try_int(handles[-2].text)
+        like_cot = handle_try_int(handles[-1].text)
         method_dict = public_parse(weiboEle=via_weiboEle)
         is_top = 0
         is_via = 0
@@ -109,22 +108,27 @@ class Weibo:
         user_id=None,submit_time=None,
         source=None,is_via=None,via_weibo_id=None
     ):
-        create_time = time.localtime()
         if save_self:
             user_id = self.user_id
+            weibo_id = self.weibo_id
+        if self.get_db_id(weibo_id):
+            print('Weibo save error: 微博之前已存')
+            return False
         author_db_id = self.get_author_db_id(user_account_id=user_id)
         if not author_db_id:
             user = User(user_id,self.conn)
             user.show_in_cmd()
             user.save_to_db()
+            author_db_id = self.get_author_db_id(user_account_id=user_id)
+            #author_db_id = user.get_db_id()
         else:
             print('作者已存')
         if save_self:
-            method_tuple = (self.is_top,self.like_cot,self.comment_cot,self.via_cot,self.content,self.weibo_id,self.submit_time,self.source,self.is_via,self.via_weibo_id,create_time,author_db_id)
+            method_tuple = (self.is_top,self.like_cot,self.comment_cot,self.via_cot,self.content,self.weibo_id,self.submit_time,self.source,self.is_via,self.via_weibo_id,time.localtime(),author_db_id)
         else:
-            method_tuple = (is_top,like_cot,comment_cot,via_cot,content,weibo_id,submit_time,source,is_via,via_weibo_id,create_time,author_db_id)
+            method_tuple = (is_top,like_cot,comment_cot,via_cot,content,weibo_id,submit_time,source,is_via,via_weibo_id,time.localtime(),author_db_id)
         try:
-            self.cur.execute(
+            self.conn.cursor().execute(
                 'insert into weibo(is_top,like_cot,comment_cot,via_cot,content,weibo_id,submit_time,source,is_via,via_weibo_id,create_time,user)'
                 'values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
                 method_tuple
@@ -137,11 +141,28 @@ class Weibo:
         return False
 
 
-    def get_author_db_id(self,user_account_id):
-        self.cur.execute(
+    def get_author_db_id(self,user_account_id=None):
+        cur = self.conn.cursor()
+        if user_account_id==None:
+            user_account_id = self.user_id
+        cur.execute(
             'select id from user where account_id = ' + user_account_id
         )
-        data = self.cur.fetchall()
+        data = cur.fetchall()
+        if data:
+            return data[0][0]
+        else:
+            return False
+
+
+    def get_db_id(self,weibo_id=None):
+        cur = self.conn.cursor()
+        if weibo_id==None:
+            weibo_id = self.weibo_id
+        cur.execute(
+            'select id from weibo where weibo_id = ' + weibo_id
+        )
+        data = cur.fetchall()
         if data:
             return data[0][0]
         else:
@@ -149,23 +170,23 @@ class Weibo:
 
 
 
-
-
 if __name__=="__main__":
+    print('run main ok')
     conn = pymysql.connect(
         host='localhost',   port=3306,
         user='root',        passwd='',
         db='selenium_weibo',   charset='utf8'
     )
     browser = webdriver.Chrome()
-    user_account_id = '1401880315'
+    user_account_id = '5360104594'
     access_homepage(user_account_id,browser)
     weiboEles = browser.find_elements_by_class_name('WB_feed_type')
     for weiboEle in weiboEles:
         weibo = Weibo(weiboEle,conn)
         weibo.show_in_cmd()
         if weibo.save_to_db():
-            pass#email
+            pass#email or other func
+        print('\n\n')
     browser.close()
     conn.close()
 

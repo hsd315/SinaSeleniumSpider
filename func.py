@@ -4,14 +4,20 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 import time,datetime
+from emailClass import Email
 
-def access_homepage(user_account_id,browser=None):
+def access_homepage(user_account_id,browser=None,get_shot=False):
     if not browser:
         browser = webdriver.Chrome()
     userHomeLink = 'http://weibo.com/u/'+ user_account_id + '?is_all=1'
-    browser.set_window_size(
-        width=1000,height=800
-    )
+    if not get_shot:
+        browser.set_window_size(
+            width=1000,height=800
+        )
+    else:
+        browser.set_window_size(
+            height=1050,width=1000
+        )
     while(1):
         print ('Homepage_url: '+userHomeLink)
         try:
@@ -26,7 +32,8 @@ def access_homepage(user_account_id,browser=None):
                     print('元素显示不正常，重复访问...')
         except:
             print(user_account_id+': '+'homepage加载异常,重复访问...')
-            time.sleep(3)
+            time.sleep(1)
+    return browser
 
 
 def time_str_convert_list(time_str):
@@ -51,3 +58,37 @@ def public_parse(weiboEle):
     if u'来自' in wb_from:
         ret['source'] = wb_from.split('来自 ')[-1]
     return ret
+
+
+def handle_try_int(cot_text):
+    try:
+        cot = int(cot_text)
+    except:
+        if cot_text in ['转发','评论','赞']:
+            cot = 0
+        else:
+            print('cot_text:',cot_text)
+            raise Exception('转发评论赞都不匹配')
+    return cot
+
+
+def send_mail(subject,content,img_src=None):
+        local_time = time.strftime("%H:%M:%S %Y-%m-%d",time.localtime(time.time()))
+        emailAI = Email(
+            receiver='965606089@qq.com',
+            sender='luyangaini@vip.qq.com',
+            subject=subject+local_time,
+            content=content,
+            img_src=img_src,
+        )
+        emailAI.conn_server(
+            host='smtp.qq.com',
+            port = 587
+        )
+        emailAI.login(
+            username='luyangaini@vip.qq.com',
+            password='ptuevbbulatcbcfh'
+        )
+        emailAI.send()
+        emailAI.close()
+

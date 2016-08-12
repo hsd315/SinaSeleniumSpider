@@ -135,14 +135,18 @@ class SeleniumWeiboCatch(Thread):
         emailAI = Email(
             receiver='965606089@qq.com',
             sender='luyangaini@vip.qq.com',
-            host = 'smtp.qq.com',
-            port = 587,
             subject=subject+local_time,
             content=content,
             img_src=img_src,
         )
-        emailAI.conn_server()
-        emailAI.login(username='luyangaini@vip.qq.com',password='ptpkfdscqjkfbehe')
+        emailAI.conn_server(
+            host='smtp.qq.com',
+            port = 587
+        )
+        emailAI.login(
+            username='luyangaini@vip.qq.com',
+            password='ptpkfdscqjkfbehe'
+        )
         emailAI.send()
         emailAI.close()
 

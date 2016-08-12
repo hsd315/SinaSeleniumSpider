@@ -11,32 +11,13 @@
 """
 
 import smtplib
-from email.mime.text import MIMEText
+from email.mime.text import MIMEText  
 from email.header import Header
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
+
 class Email:
-    '''
-        Usage like:
-            email = Email(
-                receiver='965606089@qq.com',
-                sender='luyang@qq.com',
-                subject=subject+local_time,
-                content=content,
-                img_src='~/img/weixin.png',
-            )
-            email.conn_server(
-                host='smtp.qq.com',
-                port = 587
-            )
-            email.login(
-                username='luyang@qq.com',
-                password='xxxxxx'
-            )
-            email.send()
-            email.close()
-    '''
     def __init__(
             self,sender,receiver,subject,content,
             subtype='plain',img_src=None
@@ -62,7 +43,7 @@ class Email:
         #连接服务器,并启动tls服务
         try:
             self.smtp.connect(host,port)
-            self.smtp.starttls()
+            self.smtp.starttls() 
         except Exception as e:
             print('conn_server():',e)
 
@@ -87,3 +68,24 @@ class Email:
 
     def close(self):
         self.smtp.close()
+
+
+
+if __name__=='__main__':
+    '''使用方法如下'''
+    emailAI = Email(
+        receiver='965606089@qq.com',
+        sender='luyangaini@vip.qq.com',
+        subject='this is test email',
+        content='fuck',
+    )
+    emailAI.conn_server(
+        host='smtp.qq.com',
+        port = 587
+    )
+    emailAI.login(
+        username='luyangaini@vip.qq.com',
+        password='xx'
+    )
+    emailAI.send()
+    emailAI.close()
