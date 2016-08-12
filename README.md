@@ -1,5 +1,5 @@
 #SinaSeleniumSpider
-- 1.该爬虫直接爬取weibo.com大站，
+- 1.该爬虫直接爬取weibo.com大站，大部分数据无需登陆，无需cookie
 
 如对数据量有要求建议爬取weibo.cn。
 这里仅作测试实验使用。
