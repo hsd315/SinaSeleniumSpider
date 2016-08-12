@@ -19,7 +19,7 @@ def access_homepage(user_account_id,browser=None,get_shot=False):
             height=1050,width=1000
         )
     while(1):
-        #print ('Homepage_url: '+userHomeLink)
+        #print (user_account_id+': '+'Homepage_url: '+userHomeLink)
         try:
             browser.get(userHomeLink)
             if WebDriverWait(browser, 10).until(
@@ -29,7 +29,7 @@ def access_homepage(user_account_id,browser=None,get_shot=False):
                     print(user_account_id+': '+'homepage加载正常...')
                     break
                 else:
-                    print('元素显示不正常，重复访问...')
+                    print(user_account_id+': '+'元素显示不正常，重复访问...')
         except:
             print(user_account_id+': '+'homepage加载异常,重复访问...')
             time.sleep(1)

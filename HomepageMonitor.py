@@ -28,27 +28,31 @@ class HomepageMonitor(Thread):
 
     def run(self):
         while(1):
-            access_homepage(self.user_account_id,self.driver)
-            weiboEle_list = self.driver.find_elements_by_class_name('WB_feed_type')
-            new_weiboEle_list = self.get_new_weiboEle_list(weiboEle_list)
-            if new_weiboEle_list:
-                print(self.user_account_id+':'+str(len(new_weiboEle_list))+'条新微博存在！')
-                for weiboEle in new_weiboEle_list:
-                    weibo = Weibo(weiboEle,self.conn)
-                    weibo.parse()
-                    weibo.show_in_cmd()
-                    if weibo.save_to_db():
-                        self.new_weibo_action(content=weibo.content)
-                    print('\n\n')
-            else:
-                print(self.user_account_id+': '+'本页无未存微博')
+            try:
+                access_homepage(self.user_account_id,self.driver)
+                weiboEle_list = self.driver.find_elements_by_class_name('WB_feed_type')
+                new_weiboEle_list = self.get_new_weiboEle_list(weiboEle_list)
+                if new_weiboEle_list:
+                    print(self.user_account_id+':'+str(len(new_weiboEle_list))+'条新微博存在！')
+                    for weiboEle in new_weiboEle_list:
+                        weibo = Weibo(weiboEle,self.conn)
+                        weibo.parse()
+                        weibo.show_in_cmd()
+                        if weibo.save_to_db():
+                            self.new_weibo_action(content=weibo.content)
+                        print('\n\n')
+                else:
+                    print(self.user_account_id+': '+'本页无未存微博')
+            except:
+                pass
             time.sleep(random.randint(2,4))
 
 
     def get_homepage_screenshot(self):
-        new_browser = access_homepage(self.user_account_id)
+        new_browser = access_homepage(self.user_account_id,get_shot=True)
         ele = new_browser.find_element_by_xpath('//*[@id="plc_main"]')
         ele.location_once_scrolled_into_view
+        time.sleep(1)
         local_time = time.strftime("%Y%m%d%H%M%S",time.localtime(time.time()))
         save_name = 'Screenshots/'+local_time+'by'+self.user_account_id+'.png'
         try:
@@ -56,7 +60,6 @@ class HomepageMonitor(Thread):
             print(self.user_account_id+': '+'图片保存成功，文件名为:'+save_name)
         except:
             print(self.user_account_id+': '+'图片保存失败')
-        time.sleep(1)
         new_browser.close()
         return save_name
 
