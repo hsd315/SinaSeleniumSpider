@@ -17,65 +17,123 @@ import time,pymysql
 
 
 class User:
-    def __init__(self,user_account_id,conn=None):
+    def __init__(self,user_account_id,conn=None,ready_browser=None):
         if conn:
             self.conn = conn
-        self.driver = webdriver.Chrome()
+        if ready_browser:
+            self.driver = ready_browser
+        else:
+            self.driver = access_homepage(user_account_id)
         self.account_id = user_account_id
-        self.username = ''
-        self.sex = None
-        self.area = None
-        self.is_auth = None
-        self.auth_info = None
-        self.is_vip = None
-        self.birthday = None
-        self.abstract_info = None
         self.company = None
         self.school = None
-        self.fans_cot = None
-        self.weibo_cot = None
-        self.follow_cot = None
-        self.create_time = None
-        self.homepageParse()
-        self.tear_down()
+        self.area = None
+        self.birthday = None
+        self.abstract_info = None
+        self.shadow = self.driver.find_element_by_class_name('shadow')
+        self.tb = self.driver.find_element_by_class_name('tb_counter').find_elements_by_tag_name('strong')
+        self.parse_details()
+
+
+    @property
+    def username(self):
+        return self.shadow.find_element_by_class_name('username').text
+
+
+    @property
+    def sex(self):
+        try:
+            self.shadow.find_element_by_class_name('icon_pf_male')
+            return 1
+        except:
+            return 0
+
+
+    @property
+    def is_auth(self):
+        shadow = self.shadow
+        try:
+            shadow.find_element_by_class_name('icon_pf_approve')
+        except:
+            try:
+                shadow.find_element_by_class_name('icon_pf_approve_co')
+            except:
+                return 0
+        return 1
+
+
+    @property
+    def auth_info(self):
+        if self.is_auth:
+            return self.shadow.find_element_by_class_name('pf_intro').text
+        else:
+            return None
+
+
+    @property
+    def is_vip(self):
+        try:
+            self.shadow.find_element_by_class_name('icon_member4')
+            return 1
+        except:
+            return 0
+
+
+    @property
+    def fans_cot(self):
+        return int(self.tb[1].text)
+
+
+    @property
+    def weibo_cot(self):
+        return int(self.tb[2].text)
+
+
+    @property
+    def follow_cot(self):
+        return int(self.tb[0].text)
+
+
+    @property
+    def db_id(self,account_id=None):
+        if account_id==None:
+            account_id = self.account_id
+        self.cur.execute(
+            'select id from user where account_id = ' + account_id
+        )
+        data = self.cur.fetchall()
+        if data:
+            return data[0][0]
+        else:
+            return False
 
 
     def show_in_cmd(self):
         print('**************用户信息**************')
-        print('account_id :\t\t'+self.account_id)
-        print('username :\t\t'+self.username)
-        print('is_vip :\t\t'+str(self.is_vip))
-        print('fans_cot :\t\t'+str(self.fans_cot))
-        print('weibo_cot :\t\t'+str(self.weibo_cot))
-        print('follow_cot :\t\t'+str(self.follow_cot))
-        print('sex :\t\t\t'+str(self.sex))
-        print('is_auth :\t'+str(self.is_auth))
-        if self.area:
-            print('area :\t\t\t'+self.area)
-        if self.auth_info:
-            print('auth_info :\t'+self.auth_info)
-        if self.birthday:
-            print('birthday :\t\t'+self.birthday)
-        if self.abstract_info:
-            print('abstract_info :\t\t'+self.abstract_info)
-        if self.company:
-            print('company :\t\t'+self.company)
-        if self.school:
-            print('school :\t\t'+self.school)
+        print('account_id :',self.account_id)
+        print('username :',self.username)
+        print('is_vip :',self.is_vip)
+        print('fans_cot :',self.fans_cot)
+        print('weibo_cot :',self.weibo_cot)
+        print('follow_cot :',self.follow_cot)
+        print('sex :',self.sex)
+        print('is_auth :',self.is_auth)
+        print('area :',self.area)
+        print('auth_info :',self.auth_info)
+        print('birthday :',self.birthday)
+        print('abstract_info :',self.abstract_info)
+        print('company :',self.company)
+        print('school :',self.school)
         print('**************用户信息**************')
-
-    
-    def homepageParse(self):
-        access_homepage(self.account_id,self.driver)
-        self.parse_basics()
-        self.parse_details()
 
 
     def parse_details(self):
         details = self.driver.find_element_by_class_name('ul_detail').find_elements_by_tag_name('li')
         for detail in details:
-            info = detail.text.split('\n')[1]
-            #print (info)
+            try:
+                info = detail.text.split('\n')[1]
+            except:
+                continue
             if detail.text.split('\n')[0]=='2':
                 self.area = info
                 continue
@@ -92,37 +150,6 @@ class User:
                 self.abstract_info = info.split(u'：')[1]
 
 
-    def parse_basics(self):
-        self.username = self.driver.find_element_by_class_name('username').text
-        tb = self.driver.find_element_by_class_name('tb_counter').find_elements_by_tag_name('strong')
-        self.follow_cot = int(tb[0].text)
-        self.fans_cot = int(tb[1].text)
-        self.weibo_cot = int(tb[2].text)
-        shadow = self.driver.find_element_by_class_name('shadow')
-        try:
-            shadow.find_element_by_class_name('icon_pf_male')
-            self.sex = 1
-        except:
-            self.sex = 0
-        try:
-            shadow.find_element_by_class_name('icon_member4')
-            self.is_vip = 1
-        except:
-            self.is_vip = 0
-        try:
-            shadow.find_element_by_class_name('icon_pf_approve')
-            self.is_auth = 1
-            self.auth_info = shadow.find_element_by_class_name('pf_intro').text
-        except:
-            try:
-                shadow.find_element_by_class_name('icon_pf_approve_co')
-                self.is_auth = 1
-                self.auth_info = shadow.find_element_by_class_name('pf_intro').text
-            except:
-                self.is_auth = 0
-                self.abstract_info = shadow.find_element_by_class_name('pf_intro').text
-
-
     def save_to_db(self):
         cur = self.conn.cursor()
         try:
@@ -137,20 +164,7 @@ class User:
             print ('User save error: '+str(e))
 
 
-    def get_db_id(self,account_id=None):
-        if account_id==None:
-            account_id = self.account_id
-        self.cur.execute(
-            'select id from user where account_id = ' + account_id
-        )
-        data = self.cur.fetchall()
-        if data:
-            return data[0][0]
-        else:
-            return False
-
-
-    def tear_down(self):
+    def destory(self):
         self.driver.close()
 
 
@@ -161,7 +175,7 @@ if __name__=="__main__":
         user='root',        passwd='',
         db='selenium_weibo',   charset='utf8'
     )
-    user_id_pool = ['277772655','5360104594','5842071290']
+    user_id_pool = ['1650246564']
     for user_id in user_id_pool:
         user = User(user_account_id=user_id,conn=conn)
         user.show_in_cmd()

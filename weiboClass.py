@@ -129,11 +129,16 @@ class Weibo:
             return False
         author_db_id = self.get_author_db_id(user_account_id=user_id)
         if not author_db_id:
-            user = User(user_id,self.conn)
+            user = User(
+                user_account_id = user_id,
+                conn = self.conn,
+                #ready_browser = self.driver
+            )
             user.show_in_cmd()
             user.save_to_db()
-            author_db_id = self.get_author_db_id(user_account_id=user_id)
-            #author_db_id = user.get_db_id()
+            #author_db_id = self.get_author_db_id(user_account_id=user_id)
+            author_db_id = user.db_id
+            user.destory()
         else:
             print('Author has been saved previously')
         if save_self:

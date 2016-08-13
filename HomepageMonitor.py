@@ -33,7 +33,7 @@ class HomepageMonitor(Thread):
                 weiboEle_list = self.driver.find_elements_by_class_name('WB_feed_type')
                 new_weiboEle_list = self.get_new_weiboEle_list(weiboEle_list)
                 if new_weiboEle_list:
-                    print(self.user_account_id+':'+str(len(new_weiboEle_list))+' New Weibos Exist!')
+                    print(self.user_account_id+': ['+str(len(new_weiboEle_list))+'] New Weibos Exist!')
                     for weiboEle in new_weiboEle_list:
                         weibo = Weibo(weiboEle,self.conn)
                         weibo.parse()
@@ -43,8 +43,8 @@ class HomepageMonitor(Thread):
                         print('\n\n')
                 else:
                     print(self.user_account_id+': '+'No New Weibo in this page!')
-            except:
-                pass
+            except Exception as e:
+                print('HomepageMonitor: "run()" Error : ' + str(e))
             time.sleep(random.randint(2,4))
 
 

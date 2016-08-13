@@ -13,7 +13,7 @@
 from HomepageMonitor import HomepageMonitor
 import time,pymysql
 
-class MonitorHandler(object):
+class MonitorHandler:
     def __init__(self,user_list,conn=None):
         if conn:
             self.conn = conn
