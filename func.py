@@ -6,18 +6,13 @@ from selenium import webdriver
 import time,datetime
 from emailClass import Email
 
-def access_homepage(user_account_id,browser=None,get_shot=False):
+def access_homepage(user_account_id,browser=None):
     if not browser:
         browser = webdriver.Chrome()
+    browser.set_window_size(
+        width=1000,height=800
+    )
     userHomeLink = 'http://weibo.com/u/'+ user_account_id + '?is_all=1'
-    if not get_shot:
-        browser.set_window_size(
-            width=1000,height=800
-        )
-    else:
-        browser.set_window_size(
-            height=1050,width=1000
-        )
     while(1):
         #print (user_account_id+': '+'Homepage_url: '+userHomeLink)
         try:

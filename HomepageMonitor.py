@@ -19,7 +19,7 @@ import random,pymysql,time
 class HomepageMonitor(Thread):
     def __init__(self,user_account_id,conn=None):
         Thread.__init__(self)
-        print(user_account_id+': Has Get The Thread!')
+        print(user_account_id+': Got the thread!')
         self.user_account_id = user_account_id
         self.driver = webdriver.Chrome()
         if conn:
@@ -33,42 +33,43 @@ class HomepageMonitor(Thread):
                 weiboEle_list = self.driver.find_elements_by_class_name('WB_feed_type')
                 new_weiboEle_list = self.get_new_weiboEle_list(weiboEle_list)
                 if new_weiboEle_list:
-                    print(self.user_account_id+':'+str(len(new_weiboEle_list))+' Weibos Exist!')
+                    print(self.user_account_id+':'+str(len(new_weiboEle_list))+' New Weibos Exist!')
                     for weiboEle in new_weiboEle_list:
                         weibo = Weibo(weiboEle,self.conn)
                         weibo.parse()
                         weibo.show_in_cmd()
                         if weibo.save_to_db():
-                            self.new_weibo_action(content=weibo.content)
+                            self.new_weibo_action(weiboObj=weibo)
                         print('\n\n')
                 else:
-                    print(self.user_account_id+': '+'This Page Does Not Have New Weibo!')
+                    print(self.user_account_id+': '+'No New Weibo in this page!')
             except:
                 pass
             time.sleep(random.randint(2,4))
 
 
-    def get_homepage_screenshot(self):
-        new_browser = access_homepage(self.user_account_id,get_shot=True)
-        ele = new_browser.find_element_by_xpath('//*[@id="plc_main"]')
-        ele.location_once_scrolled_into_view
+    def get_weibo_screenshot(self,weiboEle):
+        self.driver.set_window_size(
+            width=1000,height=1000
+        )
+        weiboEle.location_once_scrolled_into_view
+        print('locate ok')
         time.sleep(1)
         local_time = time.strftime("%Y%m%d%H%M%S",time.localtime(time.time()))
         save_name = 'Screenshots/'+local_time+'by'+self.user_account_id+'.png'
         try:
             self.driver.save_screenshot(save_name)
-            print(self.user_account_id+': '+'IMG Saves Success，img_src:'+save_name)
+            print(self.user_account_id+': '+'IMG Save Success，img_src:'+save_name)
         except:
-            print(self.user_account_id+': '+'IMG Saves Fail')
-        new_browser.close()
+            print(self.user_account_id+': '+'IMG Save Fail')
         return save_name
 
 
-    def new_weibo_action(self,content):
+    def new_weibo_action(self,weiboObj):
         send_mail(
             subject = self.user_account_id+'Sent New Weibo!',
-            content = content + '\nplease check in http://weibo.com/u/'+ self.user_account_id + '?is_all=1',
-            img_src = self.get_homepage_screenshot()
+            content = weiboObj.content + '\nplease check in http://weibo.com/u/'+ self.user_account_id + '?is_all=1',
+            img_src = self.get_weibo_screenshot(weiboObj.weiboEle)
         )
 
 

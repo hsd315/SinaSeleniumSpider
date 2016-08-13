@@ -47,4 +47,6 @@ if __name__=='__main__':
 
     user_list = ['277772655','5360104594','5842071290']
 
+    #user_list = ['277772655']
+
     MonitorHandler(user_list,conn).run()
