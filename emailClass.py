@@ -51,7 +51,7 @@ class Email:
     def login(self,username,password):
         try:
             self.smtp.login(username, password)
-            log_string = username+'登陆成功'+'\n'
+            log_string = username+' Login OK '+'\n'
             print(log_string)#可以考虑写在日志里
         except Exception as e:
             print('login():',e)
@@ -60,7 +60,7 @@ class Email:
     def send(self):
         try:
             self.smtp.sendmail(self.sender, self.receiver, self.msg.as_string())
-            log_string = '邮件已投至'+self.receiver+'\n'
+            log_string = 'Email Has Sent To '+self.receiver+'\n'
             print(log_string)
         except Exception as e:
             print('send():',e)
@@ -78,6 +78,7 @@ if __name__=='__main__':
         sender='luyangaini@vip.qq.com',
         subject='this is test email',
         content='fuck',
+        img_src='Screenshots/20160812232731by5360104594.png'
     )
     emailAI.conn_server(
         host='smtp.qq.com',
@@ -85,7 +86,7 @@ if __name__=='__main__':
     )
     emailAI.login(
         username='luyangaini@vip.qq.com',
-        password='xx'
+        password='ptuevbbulatcbcfh'
     )
     emailAI.send()
     emailAI.close()

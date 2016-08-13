@@ -19,7 +19,7 @@ import random,pymysql,time
 class HomepageMonitor(Thread):
     def __init__(self,user_account_id,conn=None):
         Thread.__init__(self)
-        print(user_account_id+': 已分配得到线程')
+        print(user_account_id+': Has Get The Thread!')
         self.user_account_id = user_account_id
         self.driver = webdriver.Chrome()
         if conn:
@@ -33,7 +33,7 @@ class HomepageMonitor(Thread):
                 weiboEle_list = self.driver.find_elements_by_class_name('WB_feed_type')
                 new_weiboEle_list = self.get_new_weiboEle_list(weiboEle_list)
                 if new_weiboEle_list:
-                    print(self.user_account_id+':'+str(len(new_weiboEle_list))+'条新微博存在！')
+                    print(self.user_account_id+':'+str(len(new_weiboEle_list))+' Weibos Exist!')
                     for weiboEle in new_weiboEle_list:
                         weibo = Weibo(weiboEle,self.conn)
                         weibo.parse()
@@ -42,7 +42,7 @@ class HomepageMonitor(Thread):
                             self.new_weibo_action(content=weibo.content)
                         print('\n\n')
                 else:
-                    print(self.user_account_id+': '+'本页无未存微博')
+                    print(self.user_account_id+': '+'This Page Does Not Have New Weibo!')
             except:
                 pass
             time.sleep(random.randint(2,4))
@@ -57,16 +57,16 @@ class HomepageMonitor(Thread):
         save_name = 'Screenshots/'+local_time+'by'+self.user_account_id+'.png'
         try:
             self.driver.save_screenshot(save_name)
-            print(self.user_account_id+': '+'图片保存成功，文件名为:'+save_name)
+            print(self.user_account_id+': '+'IMG Saves Success，img_src:'+save_name)
         except:
-            print(self.user_account_id+': '+'图片保存失败')
+            print(self.user_account_id+': '+'IMG Saves Fail')
         new_browser.close()
         return save_name
 
 
     def new_weibo_action(self,content):
         send_mail(
-            subject = self.user_account_id+'发新微博了!',
+            subject = self.user_account_id+'Sent New Weibo!',
             content = content + '\nplease check in http://weibo.com/u/'+ self.user_account_id + '?is_all=1',
             img_src = self.get_homepage_screenshot()
         )

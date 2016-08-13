@@ -26,12 +26,12 @@ def access_homepage(user_account_id,browser=None,get_shot=False):
                 EC.presence_of_element_located((By.CLASS_NAME,'WB_frame'))
             ):
                 if browser.find_elements_by_class_name('tb_counter') and browser.find_elements_by_class_name('ul_detail'):
-                    print(user_account_id+': '+'homepage加载正常...')
+                    print(user_account_id+': '+'Homepage Loads OK...')
                     break
                 else:
-                    print(user_account_id+': '+'元素显示不正常，重复访问...')
+                    print(user_account_id+': '+'Element Displays Error!Visit Again...')
         except:
-            print(user_account_id+': '+'homepage加载异常,重复访问...')
+            print(user_account_id+': '+'Homepage Loads Error,Visit Again...')
             time.sleep(1)
     return browser
 
@@ -68,7 +68,7 @@ def handle_try_int(cot_text):
             cot = 0
         else:
             print('cot_text:',cot_text)
-            raise Exception('转发评论赞都不匹配')
+            raise Exception('nothing cant match text "via,comment,favor"')
     return cot
 
 

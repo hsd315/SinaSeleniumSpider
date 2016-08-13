@@ -63,7 +63,7 @@ class Weibo:
 
 
     def show_in_cmd(self):
-        print('**************微博信息**************')
+        print('**************WEIBO Info**************')
         print('is_top :',self.is_top)
         print('like_cot :',self.like_cot)
         print('comment_cot :',self.comment_cot)
@@ -75,7 +75,7 @@ class Weibo:
         print(u'is_via :',self.is_via)
         print('source :',self.source)
         print('via_weibo_id :',self.via_weibo_id)
-        print('**************微博信息**************')
+        print('**************WEIBO Info**************')
 
 
     def parse(self):
@@ -107,9 +107,9 @@ class Weibo:
         is_top = 0
         is_via = 0
         via_weibo_id = None
-        print('________内嵌原博信息________')
+        print('________Expand Weibo INFO________')
         print(is_top,like_cot,comment_cot,via_cot,method_dict['content'],weibo_id,user_id,method_dict['submit_time'],method_dict['source'],is_via,via_weibo_id)
-        print('________内嵌原博信息________')
+        print('________Expand Weibo INFO________')
         self.save_to_db(
             *[False,is_top,like_cot,comment_cot,via_cot,method_dict['content'],weibo_id,user_id,method_dict['submit_time'],method_dict['source'],is_via,via_weibo_id]
         )
@@ -125,7 +125,7 @@ class Weibo:
             user_id = self.author_account_id
             weibo_id = self.weibo_id
         if self.get_db_id(weibo_id):
-            print('Weibo save error: 微博之前已存')
+            print('Weibo save error: Has been saved previously')
             return False
         author_db_id = self.get_author_db_id(user_account_id=user_id)
         if not author_db_id:
@@ -135,7 +135,7 @@ class Weibo:
             author_db_id = self.get_author_db_id(user_account_id=user_id)
             #author_db_id = user.get_db_id()
         else:
-            print('作者已存')
+            print('Author has been saved previously')
         if save_self:
             method_tuple = (self.is_top,self.like_cot,self.comment_cot,self.via_cot,self.content,self.weibo_id,self.submit_time,self.source,self.is_via,self.via_weibo_id,time.localtime(),author_db_id)
         else:

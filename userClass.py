@@ -161,7 +161,7 @@ if __name__=="__main__":
         user='root',        passwd='',
         db='selenium_weibo',   charset='utf8'
     )
-    user_id_pool = ['1401880315','277772655','5360104594','5842071290']
+    user_id_pool = ['277772655','5360104594','5842071290']
     for user_id in user_id_pool:
         user = User(user_account_id=user_id,conn=conn)
         user.show_in_cmd()

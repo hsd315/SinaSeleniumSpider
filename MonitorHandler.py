@@ -25,14 +25,14 @@ class MonitorHandler(object):
 
 
     def allocate_task(self):
-        print('分配线程!')
+        print('Allocating Threads!')
         for user_id in self.user_foo:
             hpMonitor = HomepageMonitor(
                 user_account_id = user_id,
                 conn = self.conn
             )
             hpMonitor.start()
-        print('线程分配完成!')
+        print('Threads Allocated OK!')
         while(1):
             time.sleep(10)
 
